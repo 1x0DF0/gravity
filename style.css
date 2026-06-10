@@ -31,7 +31,7 @@ html, body {
 /* ---------- top bar ---------- */
 #topbar {
   position: absolute;
-  top: 0; left: 0; right: 340px;
+  top: 0; left: 0; right: 360px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -78,7 +78,7 @@ button.tb.on { background: rgba(124,155,255,.25); border-color: var(--accent); }
 #panel {
   position: absolute;
   top: 0; right: 0; bottom: 0;
-  width: 340px;
+  width: 360px;
   overflow-y: auto;
   background: var(--panel);
   border-left: 1px solid var(--border);
@@ -125,6 +125,50 @@ select {
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+/* ---------- collapsible groups & editor ---------- */
+#panel details { margin-bottom: 14px; }
+#panel summary {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+#panel summary::marker { color: var(--dim); }
+
+.editgrid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+  align-items: center;
+}
+.editgrid label { margin: 0; }
+.editgrid input {
+  background: #0d1024;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 4px 6px;
+  font: 12px ui-monospace, monospace;
+  width: 100%;
+}
+.btnrow { display: flex; gap: 8px; margin: 8px 0; }
+button.tb.small { padding: 5px 10px; font-size: 12px; }
+
+#eqbar .tag {
+  background: rgba(255,157,92,.18);
+  border: 1px solid rgba(255,157,92,.4);
+  border-radius: 5px;
+  padding: 0 5px;
+  font-size: 11px;
+  color: #ffb98a;
+}
+#presetInfo { margin: 6px 0 0; }
 
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb { background: rgba(124,155,255,.25); border-radius: 4px; }

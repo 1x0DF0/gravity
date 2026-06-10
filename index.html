@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gravity Lab — Spacetime Curvature Simulator</title>
+<title>Gravity Lab — Spacetime Curvature Instrument</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,13 +12,14 @@
   <canvas id="sim"></canvas>
 
   <header id="topbar">
-    <div class="brand">🌌 <b>Gravity Lab</b> <span class="sub">spacetime curvature simulator</span></div>
+    <div class="brand">🌌 <b>Gravity Lab</b> <span class="sub">AU · day · M☉ — real units</span></div>
     <div class="toolbar">
       <button id="btnPlay"  class="tb" title="Play / pause (Space)">⏸ Pause</button>
       <button id="btnStep"  class="tb" title="Single step">⏭ Step</button>
-      <button id="btnReset" class="tb" title="Reset current preset">↺ Reset</button>
+      <button id="btnReset" class="tb" title="Reset current scenario">↺ Reset</button>
       <button id="btnView"  class="tb" title="Toggle 2D / 3D sheet view">🕳 Sheet view</button>
-      <button id="btnLaunch" class="tb toggle" title="When on: drag on canvas to launch a new body">🚀 Launch mode</button>
+      <button id="btnLaunch" class="tb toggle" title="When on: drag on canvas to launch a new body">🚀 Launch</button>
+      <button id="btnLight" class="tb" title="Emit a fan of light rays across the view (weak-field deflection, GR factor 2)">💡 Light rays</button>
     </div>
   </header>
 
@@ -33,73 +34,121 @@
     <section>
       <h2>Scenario</h2>
       <select id="preset">
-        <option value="orbit">Planet orbiting a star</option>
-        <option value="binary">Binary stars</option>
+        <option value="solar">Solar system (real data)</option>
+        <option value="mercury">Mercury precession (GR test)</option>
+        <option value="s2">S2 around Sgr A* (real orbit)</option>
+        <option value="isco">Black hole ISCO (Paczyński–Wiita)</option>
+        <option value="trojans">Sun–Jupiter Trojans (L4/L5)</option>
+        <option value="binary">Binary stars + planet</option>
         <option value="figure8">Three-body figure-8</option>
-        <option value="solar">Mini solar system</option>
-        <option value="slingshot">Black-hole slingshot</option>
-        <option value="chaos">Random chaos (12 bodies)</option>
+        <option value="accretion">Planetesimal accretion (seeded)</option>
         <option value="empty">Empty space (build your own)</option>
       </select>
+      <p id="presetInfo" class="hint"></p>
     </section>
 
-    <section>
-      <h2>Equations <span class="hint">(the sim solves exactly what you set)</span></h2>
+    <details open>
+      <summary>Physics model</summary>
+      <label>Integrator</label>
+      <select id="integrator">
+        <option value="verlet">Velocity Verlet (2nd order, symplectic)</option>
+        <option value="yoshida4">Yoshida (4th order, symplectic)</option>
+        <option value="rk4">Runge–Kutta 4 (use for GR forces)</option>
+        <option value="euler">Symplectic Euler (1st order)</option>
+      </select>
+      <div class="checks">
+        <label><input type="checkbox" id="cAdaptive" checked> adaptive Δt</label>
+        <label><input type="checkbox" id="cMerge"> merge on contact</label>
+        <label title="Pairwise EIH first post-Newtonian correction — gives perihelion precession"><input type="checkbox" id="cPN1"> 1PN relativity</label>
+        <label title="Paczyński–Wiita potential −GM/(r−rₛ) for the heaviest body — real ISCO at 6GM/c²"><input type="checkbox" id="cPW"> PW black hole</label>
+      </div>
 
-      <label>Gravitational constant G <output id="oG"></output></label>
-      <input type="range" id="sG" min="-2" max="2" step="0.01">
+      <label>G multiplier <output id="oG"></output></label>
+      <input type="range" id="sG" min="-2" max="2" step="0.01" value="0">
 
-      <label>Force exponent n &nbsp;(F ∝ 1/rⁿ) <output id="oN"></output></label>
+      <label>c multiplier (relativity strength) <output id="oC"></output></label>
+      <input type="range" id="sC" min="-3" max="0" step="0.01" value="0">
+
+      <label>Force exponent n (F ∝ 1/rⁿ; exploratory) <output id="oN"></output></label>
       <input type="range" id="sN" min="1" max="3" step="0.01" value="2">
 
       <label>Softening ε <output id="oEps"></output></label>
-      <input type="range" id="sEps" min="0" max="20" step="0.1" value="2">
+      <input type="range" id="sEps" min="0" max="0.05" step="0.0005" value="0">
 
       <label>Time step Δt <output id="oDt"></output></label>
-      <input type="range" id="sDt" min="-3" max="0" step="0.01">
+      <input type="range" id="sDt" min="-4" max="1" step="0.01">
 
       <label>Steps / frame <output id="oSub"></output></label>
-      <input type="range" id="sSub" min="1" max="60" step="1" value="8">
+      <input type="range" id="sSub" min="1" max="200" step="1" value="12">
+    </details>
 
-      <label>Speed of light c &nbsp;(for time dilation) <output id="oC"></output></label>
-      <input type="range" id="sC" min="0.5" max="3" step="0.01" value="1.5">
-    </section>
-
-    <section>
-      <h2>Visuals</h2>
+    <details open>
+      <summary>View</summary>
       <label>Curvature warp strength <output id="oWarp"></output></label>
       <input type="range" id="sWarp" min="0" max="3" step="0.01" value="1">
       <div class="checks">
         <label><input type="checkbox" id="cGrid"  checked> spacetime grid</label>
         <label><input type="checkbox" id="cTrail" checked> trails</label>
         <label><input type="checkbox" id="cGlow"  checked> glow</label>
-        <label><input type="checkbox" id="cMerge"> merge on collision</label>
         <label><input type="checkbox" id="cFollow"> follow selected</label>
+        <label title="Co-rotating frame of the two heaviest bodies; shows Lagrange points L1–L5 and the effective potential"><input type="checkbox" id="cRot"> rotating frame</label>
       </div>
-    </section>
+    </details>
 
-    <section>
-      <h2>New body (🚀 launch mode)</h2>
-      <label>Mass <output id="oM"></output></label>
-      <input type="range" id="sM" min="-1" max="3.5" step="0.01" value="1">
-      <p class="hint">Enable 🚀 Launch mode, then drag on the canvas: start point = position, drag = velocity. Click a body to select it.</p>
-    </section>
+    <details open>
+      <summary>Selected body</summary>
+      <div id="selInfo" class="mono"></div>
+      <div id="editor" style="display:none">
+        <h3 id="eName"></h3>
+        <div class="editgrid">
+          <label>m (M☉)</label><input id="eM"  data-bodyfield="1" type="text">
+          <label>x (AU)</label><input id="eX"  data-bodyfield="1" type="text">
+          <label>y (AU)</label><input id="eY"  data-bodyfield="1" type="text">
+          <label>vx (AU/d)</label><input id="eVx" data-bodyfield="1" type="text">
+          <label>vy (AU/d)</label><input id="eVy" data-bodyfield="1" type="text">
+        </div>
+        <div class="btnrow">
+          <button id="btnApplyBody" class="tb small">Apply</button>
+          <button id="btnDelBody" class="tb small">Delete body</button>
+        </div>
+      </div>
+      <p class="hint">Click a body to select. 🚀 Launch mode: drag = position + velocity.</p>
+      <label>New body mass <output id="oM"></output></label>
+      <input type="range" id="sM" min="-8" max="2" step="0.01" value="-6">
+    </details>
 
-    <section>
-      <h2>Live diagnostics</h2>
+    <details open>
+      <summary>Diagnostics &amp; graphs</summary>
       <div id="readout" class="mono"></div>
-      <h3>Energy <span class="hint">KE · PE · total</span></h3>
-      <canvas id="gEnergy" width="300" height="110"></canvas>
-      <h3>Curvature profile Φ(x) &amp; clock rate dτ/dt</h3>
-      <canvas id="gCurv" width="300" height="110"></canvas>
-    </section>
+      <h3>Energy <span class="hint">KE · PE · total (M☉AU²/d²)</span></h3>
+      <canvas id="gEnergy" width="300" height="100"></canvas>
+      <h3>Conservation <span class="hint">log₁₀|drift|: E · L · p</span></h3>
+      <canvas id="gCons" width="300" height="100"></canvas>
+      <h3>Curvature slice <span class="hint">Φ(x) · 1−dτ/dt</span></h3>
+      <canvas id="gCurv" width="300" height="100"></canvas>
+      <h3>Kepler test <span class="hint">measured T vs a (log–log)</span></h3>
+      <canvas id="gKepler" width="300" height="100"></canvas>
+    </details>
+
+    <details>
+      <summary>Data</summary>
+      <div class="btnrow">
+        <button id="btnCSV" class="tb small" title="Export recorded trajectories as CSV">⬇ CSV</button>
+        <button id="btnSave" class="tb small" title="Save full state as JSON">⬇ Save</button>
+        <button id="btnLoad" class="tb small" title="Load a saved JSON state">⬆ Load</button>
+        <input type="file" id="fileLoad" accept=".json" style="display:none">
+      </div>
+      <p class="hint">CSV holds the auto-decimated trajectory record (t, x, y, vx, vy per body). JSON snapshots are exact and reloadable. The validation suite ships in <code>test/</code> — run <code>node test/run.js</code>.</p>
+    </details>
 
     <section class="hint">
-      <b>Controls:</b> wheel = zoom · drag = pan (2D) / orbit (3D) · click = select body · Space = pause
+      <b>Controls:</b> wheel = zoom · drag = pan (2D) / orbit (3D) · click = select · Space = pause
     </section>
 
   </aside>
 </div>
+<script src="physics.js"></script>
+<script src="presets.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

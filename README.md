@@ -1,81 +1,106 @@
-# 🌌 Gravity Lab — Spacetime Curvature Simulator
+# 🌌 Gravity Lab — a spacetime curvature instrument
 
-An interactive N-body gravity simulator that visualizes the curvature of space
-and time — with every visual driven directly by the equations you set.
-Zero dependencies, pure HTML/CSS/JS, runs entirely offline.
+An interactive N-body laboratory in **real physical units** (AU · day · M☉) that
+makes *testable predictions* — and tests them, live, against analytic general
+relativity and celestial mechanics. Zero dependencies, pure HTML/CSS/JS, runs
+entirely offline.
 
-![top view](docs/preview.png)
-![sheet view](docs/sheet-view.png)
+![solar system](docs/preview.png)
+![S2 around Sgr A*](docs/s2.png)
 
 ## Run it
 
-Just open `index.html` in any modern browser, or serve the folder:
+Open `index.html` in any modern browser, or serve the folder:
 
 ```sh
-python3 -m http.server 8000
-# → http://localhost:8000
+python3 -m http.server 8000      # → http://localhost:8000
 ```
 
-## What it does
+Run the validation suite (loads the actual sim code headlessly and checks it
+against analytic physics):
 
-**Exact physics.** Bodies are integrated with velocity-Verlet (a symplectic
-integrator, so energy stays conserved — watch the drift readout sit near
-0.0001 %). The force law is fully editable:
-
-```
-F = G·m₁·m₂ / rₛⁿ          rₛ = √(r² + ε²)   (Plummer softening)
-Φ(r) = −G·m / ((n−1)·rₛⁿ⁻¹)                  (log potential at n = 1)
-dτ/dt = √(1 + 2Φ/c² − v²/c²)                 (weak-field time dilation)
+```sh
+node test/run.js
 ```
 
-The equation bar at the bottom-left always shows exactly what is being solved.
-Change G, the force exponent n, the softening ε, or the speed of light c and
-both the dynamics and the curvature visuals respond instantly.
+## The physics
 
-**Curvature of space.** Two views, toggled with one button:
+Everything is integrated in astronomical units where G is the square of the
+Gauss gravitational constant, so real ephemeris-style numbers come out:
 
-- **Top view** — the spacetime grid is pulled toward the masses, heat-colored
-  by the depth of the local potential well.
-- **Sheet view** — the classic 3D "rubber sheet" embedding: the grid is
-  displaced by Φ(x, y) and you can orbit the camera around it by dragging.
-  Trails record the potential at the moment they were laid down, so orbits
-  visibly ride the curved sheet.
+| Model | Equation |
+|---|---|
+| Newtonian gravity | F = G·m₁·m₂ / rⁿ (n editable; Plummer softening ε optional) |
+| 1PN relativity | pairwise EIH equations of motion (Will's standard form) |
+| Black hole | Paczyński–Wiita Φ = −GM/(r−rₛ) — exact Schwarzschild ISCO at 6GM/c² |
+| Light rays | null test rays, weak-field deflection (GR factor 2), captured inside 1.5rₛ |
+| Time dilation | dτ/dt = √(1 + 2Φ/c² − v²/c²) |
 
-**Curvature of time.** Select any body to see its live clock rate dτ/dt, and
-the curvature-profile graph plots both Φ(x) and the gravitational time-dilation
-factor along a slice through the system. Lower c to exaggerate the effect.
+**Integrators:** symplectic Euler (1st), velocity Verlet (2nd, symplectic),
+Yoshida (4th, symplectic), classical RK4 (for velocity-dependent GR forces) —
+selectable live, with adaptive substepping on close encounters.
 
-**Live graphs.** Kinetic, potential and total energy over time, plus the
-potential-well / clock-rate cross-section, updated every frame.
+**Measurements the instrument makes from its own data:**
+
+- **Perihelion precession** — perihelion passages are detected with sub-step
+  parabolic interpolation; the measured Δϖ per orbit is displayed next to the
+  analytic 1PN prediction 6πGM/(c²a(1−e²)).
+- **Empirical Kepler test** — orbital periods are measured by angle accumulation
+  and plotted as T vs a (log–log) against the T = 2π√(a³/GM) line.
+- **Conservation tracking** — relative drift of energy, angular momentum and
+  linear momentum on a log scale, live. Switch integrators and watch the
+  4th-order symplectic line drop by five decades.
+- **Osculating elements** — a, e, T, speed, clock rate for any selected body.
 
 ## Scenarios
 
-| Preset | What you'll see |
+| Scenario | What it demonstrates |
 |---|---|
-| Planet orbiting a star | A clean Keplerian system to start with |
-| Binary stars | Two suns waltzing around their barycenter |
-| Three-body figure-8 | The Chenciner–Montgomery choreography (exact ICs) |
-| Mini solar system | Five planets on circular orbits |
-| Black-hole slingshot | Probes whipping around a dark 4000-mass well |
-| Random chaos | 12 bodies, optionally merging on collision |
-| Empty space | Build your own system from scratch |
+| Solar system | Real masses, a, e for all 8 planets, started at perihelion |
+| Mercury precession | 1PN advance vs the analytic prediction (c scaled ×0.02 to make ×2500 the real 0.104″/orbit visible; set c×1 for reality) |
+| S2 around Sgr A* | The real 16-yr, e = 0.88 orbit at the Galactic Centre with real c — its ≈12′/orbit Schwarzschild precession is the effect GRAVITY measured in 2020 |
+| Black hole ISCO | Paczyński–Wiita orbits: stable at 8GM/c², plunging inside 6GM/c², capture at 2rₛ |
+| Sun–Jupiter Trojans | L1–L5 computed by root-finding; rotating-frame view shows tadpole libration |
+| Binary + planet | Circumbinary dynamics |
+| Three-body figure-8 | Chenciner–Montgomery choreography, solar masses at AU scale |
+| Planetesimal accretion | Seeded RNG (reproducible), momentum-conserving merges |
 
-## Controls
+## Views & tools
 
-- **Wheel** — zoom (about the cursor in top view)
-- **Drag** — pan (top view) / orbit the camera (sheet view)
-- **Click a body** — select it (shows mass, speed, clock rate; enable
-  *follow selected* to track it)
-- **🚀 Launch mode** — drag on the canvas to fire a new body: start point is
-  the position, the drag vector is the velocity
-- **Space** — pause / resume · **⏭ Step** — single frame while paused
+- **Top view** — spacetime grid pulled toward masses, heat-colored by potential.
+- **Sheet view** — 3D embedding of Φ(x,y); drag to orbit the camera. Trails
+  store the potential at the moment they were laid down and ride the sheet.
+- **Rotating frame** — co-rotating frame of the two heaviest bodies; grid shows
+  the effective potential Φ − ½ω²ρ², Lagrange points marked L1–L5. Launching a
+  body in this view automatically adds the co-rotation velocity, so you can
+  park a probe at L4 by just clicking there.
+- **💡 Light rays** — emit a fan of null rays across the view; paths persist as
+  fading ghosts. Around the black hole you get visible lensing and capture.
+- **🚀 Launch mode** — drag = position + velocity (shown in km/s).
+- **Body editor** — type exact m, x, y, vx, vy for any selected body.
+- **Data** — CSV export of recorded trajectories, JSON save/load of exact state.
+
+## Validation
+
+`test/run.js` checks the shipped code against analytic results — among them:
+
+- Mercury's 1PN perihelion precession matches 6πGM/(c²a(1−e²)) to < 3%
+  (and vanishes with relativity off)
+- photon deflection matches 4GM/(c²b) to < 5%
+- PW circular orbits: stable at 8GM/c², unstable at 5.2GM/c² (ISCO at 6)
+- L1 at one Hill radius, L4 equilateral, probe parked at L4 librates
+- figure-8 choreography returns to its start after one analytic period
+- Yoshida-4 energy error ≪ Verlet at equal Δt; ΔL/L ~ 10⁻¹⁵
+- Earth's clock runs slow by ≈ 1.5×10⁻⁸, measured periods obey Kepler to < 1%
 
 ## Things to try
 
-- Set the force exponent **n to 3** and watch orbits become unstable —
-  Bertrand's theorem in action (only n = 2 and n = −1 give closed orbits).
-- Lower **c** until the clock-rate curve dips toward 0 near a heavy mass —
-  you've made its surface relativistic.
-- Turn on **merge on collision** in the chaos preset and watch a planetary
-  system accrete.
-- Crank **G** mid-flight and watch the sheet deepen and orbits tighten.
+- Load **Mercury precession**, watch Δϖ measured converge to Δϖ predicted in
+  the Selected-body panel, then set the c multiplier to 1 and see the real
+  0.10″/orbit prediction appear.
+- Load **Trojans**, enable 🚀 Launch, click exactly on L4 — the probe stays,
+  librating. Click slightly off — tadpole orbit.
+- Load **ISCO**, press 💡 — photon paths bend around the hole; the innermost
+  rays spiral in and vanish.
+- Set force exponent **n = 2.1** in the solar system: orbits precess (Bertrand's
+  theorem) and the Kepler plot walks off the 3/2 line.
