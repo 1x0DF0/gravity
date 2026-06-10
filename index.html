@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gravity Lab — Spacetime Curvature Simulator</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <canvas id="sim"></canvas>
+
+  <header id="topbar">
+    <div class="brand">🌌 <b>Gravity Lab</b> <span class="sub">spacetime curvature simulator</span></div>
+    <div class="toolbar">
+      <button id="btnPlay"  class="tb" title="Play / pause (Space)">⏸ Pause</button>
+      <button id="btnStep"  class="tb" title="Single step">⏭ Step</button>
+      <button id="btnReset" class="tb" title="Reset current preset">↺ Reset</button>
+      <button id="btnView"  class="tb" title="Toggle 2D / 3D sheet view">🕳 Sheet view</button>
+      <button id="btnLaunch" class="tb toggle" title="When on: drag on canvas to launch a new body">🚀 Launch mode</button>
+    </div>
+  </header>
+
+  <div id="eqbar">
+    <span id="eqForce"></span>
+    <span id="eqPot"></span>
+    <span id="eqDil"></span>
+  </div>
+
+  <aside id="panel">
+
+    <section>
+      <h2>Scenario</h2>
+      <select id="preset">
+        <option value="orbit">Planet orbiting a star</option>
+        <option value="binary">Binary stars</option>
+        <option value="figure8">Three-body figure-8</option>
+        <option value="solar">Mini solar system</option>
+        <option value="slingshot">Black-hole slingshot</option>
+        <option value="chaos">Random chaos (12 bodies)</option>
+        <option value="empty">Empty space (build your own)</option>
+      </select>
+    </section>
+
+    <section>
+      <h2>Equations <span class="hint">(the sim solves exactly what you set)</span></h2>
+
+      <label>Gravitational constant G <output id="oG"></output></label>
+      <input type="range" id="sG" min="-2" max="2" step="0.01">
+
+      <label>Force exponent n &nbsp;(F ∝ 1/rⁿ) <output id="oN"></output></label>
+      <input type="range" id="sN" min="1" max="3" step="0.01" value="2">
+
+      <label>Softening ε <output id="oEps"></output></label>
+      <input type="range" id="sEps" min="0" max="20" step="0.1" value="2">
+
+      <label>Time step Δt <output id="oDt"></output></label>
+      <input type="range" id="sDt" min="-3" max="0" step="0.01">
+
+      <label>Steps / frame <output id="oSub"></output></label>
+      <input type="range" id="sSub" min="1" max="60" step="1" value="8">
+
+      <label>Speed of light c &nbsp;(for time dilation) <output id="oC"></output></label>
+      <input type="range" id="sC" min="0.5" max="3" step="0.01" value="1.5">
+    </section>
+
+    <section>
+      <h2>Visuals</h2>
+      <label>Curvature warp strength <output id="oWarp"></output></label>
+      <input type="range" id="sWarp" min="0" max="3" step="0.01" value="1">
+      <div class="checks">
+        <label><input type="checkbox" id="cGrid"  checked> spacetime grid</label>
+        <label><input type="checkbox" id="cTrail" checked> trails</label>
+        <label><input type="checkbox" id="cGlow"  checked> glow</label>
+        <label><input type="checkbox" id="cMerge"> merge on collision</label>
+        <label><input type="checkbox" id="cFollow"> follow selected</label>
+      </div>
+    </section>
+
+    <section>
+      <h2>New body (🚀 launch mode)</h2>
+      <label>Mass <output id="oM"></output></label>
+      <input type="range" id="sM" min="-1" max="3.5" step="0.01" value="1">
+      <p class="hint">Enable 🚀 Launch mode, then drag on the canvas: start point = position, drag = velocity. Click a body to select it.</p>
+    </section>
+
+    <section>
+      <h2>Live diagnostics</h2>
+      <div id="readout" class="mono"></div>
+      <h3>Energy <span class="hint">KE · PE · total</span></h3>
+      <canvas id="gEnergy" width="300" height="110"></canvas>
+      <h3>Curvature profile Φ(x) &amp; clock rate dτ/dt</h3>
+      <canvas id="gCurv" width="300" height="110"></canvas>
+    </section>
+
+    <section class="hint">
+      <b>Controls:</b> wheel = zoom · drag = pan (2D) / orbit (3D) · click = select body · Space = pause
+    </section>
+
+  </aside>
+</div>
+<script src="main.js"></script>
+</body>
+</html>
