@@ -1,26 +1,33 @@
-# 🌌 Gravity Lab — a spacetime curvature instrument
+# 🌌 Gravity Lab + ⚛ Quantum Lab — physics instruments
 
-An interactive N-body laboratory in **real physical units** (AU · day · M☉) that
-makes *testable predictions* — and tests them, live, against analytic general
-relativity and celestial mechanics. Zero dependencies, pure HTML/CSS/JS, runs
-entirely offline.
+Two interactive laboratories that make *testable predictions* — and test them,
+live, against analytic physics and real experiments. Zero dependencies, pure
+HTML/CSS/JS, runs entirely offline.
+
+- **Gravity Lab** (`index.html`) — N-body dynamics in real units (AU · day ·
+  M☉) with post-Newtonian general relativity.
+- **Quantum Lab** (`quantum.html`) — the time-dependent Schrödinger equation,
+  solved by the split-step Fourier method (exactly unitary), with experiments
+  anchored to real measured results.
 
 ![solar system](docs/preview.png)
 ![S2 around Sgr A*](docs/s2.png)
 
 ## Run it
 
-Open `index.html` in any modern browser, or serve the folder:
+Open `index.html` (gravity) or `quantum.html` (quantum) in any modern browser,
+or serve the folder:
 
 ```sh
 python3 -m http.server 8000      # → http://localhost:8000
 ```
 
-Run the validation suite (loads the actual sim code headlessly and checks it
-against analytic physics):
+Run the validation suites (they load the actual sim code headlessly and check
+it against analytic physics):
 
 ```sh
-node test/run.js
+node test/run.js        # gravity: 23 checks
+node test/qm-run.js     # quantum: 16 checks
 ```
 
 ## The physics
@@ -104,3 +111,49 @@ selectable live, with adaptive substepping on close encounters.
   rays spiral in and vanish.
 - Set force exponent **n = 2.1** in the solar system: orbits precess (Bertrand's
   theorem) and the Kepler plot walks off the 3/2 line.
+
+---
+
+# ⚛ Quantum Lab
+
+![quantum bouncer](docs/qm-bouncer.png)
+![double slit](docs/qm-doubleslit.png)
+
+The state is a complex wavefunction ψ(x[,y],t), evolved by
+
+```
+iħ ∂ψ/∂t = [ −ħ²/2m ∇² + V ] ψ
+```
+
+with the **split-step Fourier method** — spectrally accurate and exactly
+unitary, so the norm is conserved to ~10⁻¹⁴ and the panel proves it live.
+Color is the quantum phase arg ψ; height/brightness is |ψ|². Live diagnostics:
+norm and ⟨H⟩ drift, and the Heisenberg product Δx·Δp plotted against ħ/2.
+Eigenstates are found by imaginary-time relaxation. A 📐 **Measure x** button
+performs a projective position measurement (samples |ψ|², collapses the packet).
+
+## Experiments — each anchored to something real
+
+| Experiment | Reality anchor |
+|---|---|
+| Quantum bouncer | Nesvizhevsky 2002 / qBOUNCE: neutrons bouncing on a mirror in Earth's gravity have discrete Airy-function levels — the app reproduces E₁ = 1.407 peV, ℓ_g = 5.87 µm |
+| Atom-interferometer gravimeter | The COW experiment (1975) and Kasevich–Chu interferometers: gravitational quantum phase Δφ = mgΔh·t/ħ — the app infers g from the measured fringe rate |
+| Double slit | Matter-wave interference (Tonomura's electrons): measured first-minima fringe spacing vs λD/d |
+| Tunneling | Transmission vs the analytic ∫\|φ(k)\|²T(k)dk for the discretized barrier |
+| Harmonic oscillator | Coherent states: classical period, no spreading, Eₙ = (n+½)ħω |
+| Free packet | Dispersion σ(t) = σ₀√(1+(ħt/2mσ₀²)²) overlaid live |
+| Ehrenfest orbit | Gravity Lab's orbit, quantized: ⟨x⟩ tracks the classical RK4 path until the packet delocalizes |
+| Two-particle collision | Configuration-space ψ(x₁,x₂): a 50/50 collision (E_rel = V₀) produces exactly K = 2 Schmidt modes — entanglement, live |
+
+The two-particle panel is also the honest wall: n particles need grid^n
+amplitudes — Feynman's 1981 argument for building quantum computers.
+
+## Validation (`node test/qm-run.js`)
+
+- norm conserved to 10⁻¹³ over 5000 steps; FFT round-trip at machine precision
+- bouncer eigenvalues match Airy zeros to 4 decimals (E₁ ↔ 1.41 peV)
+- gravimeter phase rate = mgΔh/ħ within 0.4%; tunneling T within 2%;
+  fringes within 5%
+- coherent state revives with overlap 1.000000 after exactly 2π/ω
+- Ehrenfest exact for quadratic potentials (returns to start to 10⁻³)
+- product state K = 1.000; 50/50 collision K = 2.009; no interaction ⇒ K stays 1
