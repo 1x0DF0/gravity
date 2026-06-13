@@ -13,22 +13,57 @@ HTML/CSS/JS, runs entirely offline.
 ![solar system](docs/preview.png)
 ![S2 around Sgr A*](docs/s2.png)
 
-## Run it
+## Install & run
 
-Open `index.html` (gravity) or `quantum.html` (quantum) in any modern browser,
-or serve the folder:
+There is **nothing to install and no build step** — the app is plain
+HTML/CSS/JS with zero dependencies and runs entirely offline. You only need the
+files in this repo and a modern browser (Chrome, Firefox, Safari, or Edge).
 
-```sh
-python3 -m http.server 8000      # → http://localhost:8000
-```
-
-Run the validation suites (they load the actual sim code headlessly and check
-it against analytic physics):
+**1. Get the files**
 
 ```sh
-node test/run.js        # gravity: 23 checks
-node test/qm-run.js     # quantum: 16 checks
+git clone <this-repo-url>
+cd gravity
 ```
+
+(Or just download the folder — there is no package to fetch.)
+
+**2. Open the app** — pick whichever is easiest:
+
+- **Simplest:** double-click `index.html` (Gravity Lab) or `quantum.html`
+  (Quantum Lab) to open it directly in your browser. Use the 🌌 / ⚛ buttons in
+  the top toolbar to switch between the two labs.
+
+- **Recommended:** serve the folder over a local web server. This avoids
+  browser `file://` restrictions and behaves exactly like a deployed site.
+  Use any one of these from inside the project folder:
+
+  ```sh
+  python3 -m http.server 8000      # Python (preinstalled on macOS/Linux)
+  # or
+  npx serve .                      # Node.js
+  # or
+  php -S localhost:8000            # PHP
+  ```
+
+  Then open <http://localhost:8000/> for Gravity Lab, or
+  <http://localhost:8000/quantum.html> for Quantum Lab.
+
+No GPU, network, or special hardware is required; everything runs on the CPU in
+a single browser tab.
+
+### Running the validation suites (optional)
+
+The physics test suites need **Node.js 16+** (only to run the simulation code
+headlessly outside a browser — the app itself never needs Node). From the
+project folder:
+
+```sh
+node test/run.js        # Gravity Lab: 23 checks vs analytic GR & celestial mechanics
+node test/qm-run.js     # Quantum Lab: 16 checks vs analytic quantum mechanics
+```
+
+Each prints a `PASS`/`FAIL` line per check and exits non-zero if anything fails.
 
 ## The physics
 
